@@ -1,11 +1,11 @@
-﻿def parse_record(line: str) -> dict:
+def parse_record(line: str) -> dict:
     parts = line.split(";")
     if len(parts) != 3:
         raise ValueError("Неверное количество полей")
     
-    city = parts[0]
-    temp_str = parts[1]
-    date = parts[2]
+    city = parts[0].strip()
+    temp_str = parts[1].strip().replace(",", ".")
+    date = parts[2].strip()
     
     if not city or not date:
         raise ValueError("Пустой город или дата")
