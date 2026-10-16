@@ -16,3 +16,14 @@
         raise ValueError("Температура не число")
         
     return {"city": city, "temperature": temp, "date": date}
+
+def read_valid(lines: list[str]) -> list[dict]:
+    records = []
+    for line in lines:
+        if not line:
+            continue
+        try:
+            records.append(parse_record(line))
+        except ValueError:
+            pass
+    return records
