@@ -3,7 +3,7 @@ def parse_event(line: str) -> dict:
     if not line:
         raise ValueError("Пустая строка")
     
-    parts = line.split(" ", 2)
+    parts = line.split(maxsplit=2)
     if len(parts) != 3:
         raise ValueError("Неверный формат строки")
         
@@ -15,6 +15,7 @@ def parse_event(line: str) -> dict:
         raise ValueError("Неизвестный уровень")
         
     return {"time": time_str, "level": level, "message": msg}
+
 def count_levels(lines) -> dict:
     counts = {}
     for line in lines:
@@ -53,6 +54,7 @@ def top_errors(lines, n: int) -> list[list]:
     for i in range(min(n, len(arr))):
         res.append(arr[i])
     return res
+
 def format_report(counts: dict, errors: list[list]) -> str:
     res = "Отчёт по журналу\n\n"
     for key in sorted(counts.keys()):
