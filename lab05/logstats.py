@@ -53,3 +53,13 @@ def top_errors(lines, n: int) -> list[list]:
     for i in range(min(n, len(arr))):
         res.append(arr[i])
     return res
+def format_report(counts: dict, errors: list[list]) -> str:
+    res = "Отчёт по журналу\n\n"
+    for key in sorted(counts.keys()):
+        res += f"{key}: {counts[key]}\n"
+        
+    res += "\nЧастые ошибки:\n"
+    for err in errors:
+        res += f"- {err[0]} — {err[1]}\n"
+        
+    return res
