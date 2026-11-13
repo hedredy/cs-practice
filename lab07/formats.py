@@ -37,8 +37,8 @@ def parse_settings(lines: list[str]) -> dict:
                     result[key] = False
                 else:
                     try:
-                        if '.' in val or ',' in val:
-                            result[key] = float(val.replace(',', '.'))
+                        if '.' in val:
+                            result[key] = float(val)
                         else:
                             result[key] = int(val)
                     except ValueError:
