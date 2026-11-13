@@ -3,7 +3,9 @@ import json
 def csv_to_records(text: str) -> list[dict]:
     if not text.strip():
         return []
-    lines = text.strip().split('\n')
+    lines = [line for line in text.splitlines() if line.strip()]
+    if not lines:
+        return []
     headers = [h.strip() for h in lines[0].split(',')]
     records = []
     for line in lines[1:]:
@@ -14,35 +16,44 @@ def csv_to_records(text: str) -> list[dict]:
 def parse_settings(lines: list[str]) -> dict:
     result = {}
     current_list_key = None
+    
+    def cast_val(val: str):
+        v_lower = val.lower()
+        if v_lower in ('true', 'yes'): return True
+        if v_lower in ('false', 'no'): return False
+        try: return int(val)
+        except ValueError: pass
+        try: return float(val.replace(',', '.'))
+        except ValueError: pass
+        return val
+
     for line in lines:
         if '#' in line:
-            line = line.split('#')[0]
+            line = line.split('#', 1)[0]
+        
         line = line.rstrip()
         if not line:
             continue
-        if line.startswith('  - '):
-            if current_list_key:
-                result[current_list_key].append(line[4:].strip())
+            
+        stripped = line.lstrip()
+        if stripped.startswith('- '):
+            if current_list_key is not None:
+                item_val = stripped[2:].strip()
+                result[current_list_key].append(cast_val(item_val))
             continue
+            
         if ':' in line:
-            key, val = map(str.strip, line.split(':', 1))
+            key, val = line.split(':', 1)
+            key = key.strip()
+            val = val.strip()
+            
             if not val:
                 result[key] = []
                 current_list_key = key
             else:
                 current_list_key = None
-                if val.lower() in ('true', 'yes'):
-                    result[key] = True
-                elif val.lower() in ('false', 'no'):
-                    result[key] = False
-                else:
-                    try:
-                        if '.' in val:
-                            result[key] = float(val)
-                        else:
-                            result[key] = int(val)
-                    except ValueError:
-                        result[key] = val
+                result[key] = cast_val(val)
+                
     return result
 
 def merge_by_key(rows: list[dict], extra: dict, key: str = 'id') -> list[dict]:
