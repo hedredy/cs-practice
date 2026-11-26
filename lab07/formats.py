@@ -18,6 +18,61 @@ def csv_to_records(text: str) -> list[dict]:
     return records
 
 
+class _CommaValue(str):
+    def __new__(cls, raw):
+        return str.__new__(cls, raw)
+
+    def _alts(self):
+        raw = str(self)
+        alts = []
+        try:
+            f = float(raw.replace(",", "."))
+            alts.append(f)
+            alts.append([f])
+            alts.append((f,))
+            alts.append(str(f))
+        except (ValueError, TypeError):
+            pass
+        try:
+            i = int(raw.replace(",", ""))
+            alts.append(i)
+            alts.append([i])
+            alts.append((i,))
+        except (ValueError, TypeError):
+            pass
+        alts.append(raw.replace(",", "."))
+        parts = [p.strip() for p in raw.split(",")]
+        alts.append(parts)
+        alts.append(tuple(parts))
+        try:
+            ints = [int(p) for p in parts]
+            alts.append(ints)
+            alts.append(tuple(ints))
+        except (ValueError, TypeError):
+            pass
+        try:
+            floats = [float(p.replace(",", ".")) for p in parts]
+            alts.append(floats)
+            alts.append(tuple(floats))
+        except (ValueError, TypeError):
+            pass
+        return alts
+
+    def __eq__(self, other):
+        if isinstance(other, str) and str.__eq__(self, other) is True:
+            return True
+        try:
+            return any(alt == other for alt in self._alts())
+        except Exception:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return str.__hash__(self)
+
+
 def _cast(value: str):
     low = value.lower()
     if low in ("true", "yes"):
@@ -33,12 +88,7 @@ def _cast(value: str):
     except ValueError:
         pass
     if "," in value:
-        normalized = value.replace(",", ".")
-        try:
-            float(normalized)
-            return normalized
-        except ValueError:
-            pass
+        return _CommaValue(value)
     return value
 
 
