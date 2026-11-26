@@ -29,7 +29,7 @@ def _cast(value: str):
     except ValueError:
         pass
     try:
-        return float(value.replace(",", "."))
+        return float(value)
     except ValueError:
         pass
     return value
