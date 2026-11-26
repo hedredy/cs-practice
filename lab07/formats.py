@@ -19,10 +19,10 @@ def csv_to_records(text: str) -> list[dict]:
 
 
 def _cast(value: str):
-    lower = value.lower()
-    if lower in ("true", "yes"):
+    low = value.lower()
+    if low in ("true", "yes"):
         return True
-    if lower in ("false", "no"):
+    if low in ("false", "no"):
         return False
     try:
         return int(value)
@@ -32,6 +32,13 @@ def _cast(value: str):
         return float(value)
     except ValueError:
         pass
+    if "," in value:
+        normalized = value.replace(",", ".")
+        try:
+            float(normalized)
+            return normalized
+        except ValueError:
+            pass
     return value
 
 
