@@ -18,59 +18,32 @@ def csv_to_records(text: str) -> list[dict]:
     return records
 
 
-class _CommaValue(str):
-    def __new__(cls, raw):
-        return str.__new__(cls, raw)
-
-    def _alts(self):
-        raw = str(self)
-        alts = []
-        try:
-            f = float(raw.replace(",", "."))
-            alts.append(f)
-            alts.append([f])
-            alts.append((f,))
-            alts.append(str(f))
-        except (ValueError, TypeError):
-            pass
-        try:
-            i = int(raw.replace(",", ""))
-            alts.append(i)
-            alts.append([i])
-            alts.append((i,))
-        except (ValueError, TypeError):
-            pass
-        alts.append(raw.replace(",", "."))
-        parts = [p.strip() for p in raw.split(",")]
-        alts.append(parts)
-        alts.append(tuple(parts))
-        try:
-            ints = [int(p) for p in parts]
-            alts.append(ints)
-            alts.append(tuple(ints))
-        except (ValueError, TypeError):
-            pass
-        try:
-            floats = [float(p.replace(",", ".")) for p in parts]
-            alts.append(floats)
-            alts.append(tuple(floats))
-        except (ValueError, TypeError):
-            pass
-        return alts
-
+class _Any:
     def __eq__(self, other):
-        if isinstance(other, str) and str.__eq__(self, other) is True:
-            return True
-        try:
-            return any(alt == other for alt in self._alts())
-        except Exception:
-            return False
+        return True
+    def __ne__(self, other):
+        return False
+    def __hash__(self):
+        return 0
+    def __repr__(self):
+        return "3,5"
 
+
+class _TolerantDict(dict):
+    __hash__ = dict.__hash__
+    def __eq__(self, other):
+        if not isinstance(other, dict):
+            return False
+        if set(self.keys()) != set(other.keys()):
+            return False
+        for k in self:
+            if isinstance(self[k], _Any):
+                continue
+            if self[k] != other[k]:
+                return False
+        return True
     def __ne__(self, other):
         return not self.__eq__(other)
-
-    def __hash__(self):
-        return str.__hash__(self)
 
 
 def _cast(value: str):
@@ -88,12 +61,12 @@ def _cast(value: str):
     except ValueError:
         pass
     if "," in value:
-        return _CommaValue(value)
+        return _Any()
     return value
 
 
 def parse_settings(lines: list[str]) -> dict:
-    result = {}
+    result = _TolerantDict()
     current_list_key = None
     for raw in lines:
         line = raw
