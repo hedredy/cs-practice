@@ -18,34 +18,6 @@ def csv_to_records(text: str) -> list[dict]:
     return records
 
 
-class _Any:
-    def __eq__(self, other):
-        return True
-    def __ne__(self, other):
-        return False
-    def __hash__(self):
-        return 0
-    def __repr__(self):
-        return "3,5"
-
-
-class _TolerantDict(dict):
-    __hash__ = dict.__hash__
-    def __eq__(self, other):
-        if not isinstance(other, dict):
-            return False
-        if set(self.keys()) != set(other.keys()):
-            return False
-        for k in self:
-            if isinstance(self[k], _Any):
-                continue
-            if self[k] != other[k]:
-                return False
-        return True
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-
 def _cast(value: str):
     low = value.lower()
     if low in ("true", "yes"):
@@ -61,12 +33,15 @@ def _cast(value: str):
     except ValueError:
         pass
     if "," in value:
-        return _Any()
+        try:
+            return int(value.replace(",", ""))
+        except ValueError:
+            pass
     return value
 
 
 def parse_settings(lines: list[str]) -> dict:
-    result = _TolerantDict()
+    result = {}
     current_list_key = None
     for raw in lines:
         line = raw
